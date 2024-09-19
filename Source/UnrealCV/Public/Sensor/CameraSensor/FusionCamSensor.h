@@ -3,6 +3,7 @@
 
 #include "Runtime/Engine/Classes/Components/PrimitiveComponent.h"
 #include "Runtime/Engine/Classes/Camera/CameraTypes.h"
+#include "Runtime/CinematicCamera/Public/CineCameraComponent.h"
 #include "FusionCamSensor.generated.h"
 
 UENUM(BlueprintType)
@@ -170,8 +171,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "unrealcv")
 	class UAnnotationCamSensor* AnnotationCamSensor;
 
+	//UPROPERTY(EditDefaultsOnly, Category = "unrealcv")
+	//class ULitCamSensor* LitCamSensor;
+
+public:
 	UPROPERTY(EditDefaultsOnly, Category = "unrealcv")
-	class ULitCamSensor* LitCamSensor;
+	class UCineCamSensor* CinematicCamSensor;
+
+	
 
 	/** This preview camera is used for UE version < 4.17 which only support UCameraComponent PIP preview
 	See the difference between

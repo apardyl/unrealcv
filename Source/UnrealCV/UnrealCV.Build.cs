@@ -43,12 +43,16 @@ public class UnrealcvBuildConfig
 			"Networking",
 			"Sockets",
 			"Slate",
-			"ImageWrapper",
+            "SlateCore",
+            "Renderer",
+            "OpenColorIO",
+            "ImageWrapper",
 			"CinematicCamera",
 			"Projects", // Support IPluginManager
 			"RHI", // Support low-level RHI operation
 			"Json",
-		});
+        });
+
 
 		EditorPrivateDependencyModuleNames.AddRange(
 			new string[]
@@ -58,12 +62,12 @@ public class UnrealcvBuildConfig
 			}
 		);
 
-		DynamicallyLoadedModuleNames.AddRange(
-			new string[]
-			{
-				"Renderer"
-			}
-		);
+		//DynamicallyLoadedModuleNames.AddRange(
+		//	new string[]
+		//	{
+		//		"Renderer"
+		//	}
+		//);
 	}
 }
 

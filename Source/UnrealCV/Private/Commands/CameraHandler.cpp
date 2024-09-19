@@ -19,6 +19,7 @@
 
 #include "UnrealcvStats.h"
 #include "UnrealClient.h"
+#include "Sensor/CameraSensor/CineCameraSensor.h"
 
 DECLARE_CYCLE_STAT(TEXT("FCameraHandler::GetCameraLit"), STAT_GetCameraLit, STATGROUP_UnrealCV);
 DECLARE_CYCLE_STAT(TEXT("FCameraHandler::SaveData"), STAT_SaveData, STATGROUP_UnrealCV);
@@ -727,6 +728,18 @@ FExecStatus FCameraHandler::SetFocalParams(const TArray<FString>& Args)
     return FExecStatus::OK();
 }
 
+FExecStatus FCameraHandler::SetCinemaSensorParams(const TArray<FString>& Args) {
+	FExecStatus Status = FExecStatus::InvalidArgument;
+	UFusionCamSensor* FusionCamSensor = GetCamera(Args, Status);
+	if (!IsValid(FusionCamSensor)) return FExecStatus::InvalidArgument;
+	if (Args.Num() != 3) return FExecStatus::InvalidArgument; // exposure value
+	float SensorSizeMM = FCString::Atof(*Args[1]);
+	float FocalLenghtMM = FCString::Atof(*Args[2]);
+	int SensorPx = FCString::Atoi(*Args[3]);
+	FusionCamSensor->CinematicCamSensor->SetParams(SensorSizeMM, FocalLenghtMM, SensorPx);
+	return FExecStatus::OK();
+}
+
 
 void FCameraHandler::RegisterCommands()
 {
@@ -910,4 +923,10 @@ void FCameraHandler::RegisterCommands()
         FDispatcherDelegate::CreateRaw(this, &FCameraHandler::SetFocalParams),
         "Set camera focus distance and range"
     );
+
+	CommandDispatcher->BindCommand(
+		"vget /camera/[uint]/cine [float] [float] [uint]",
+		FDispatcherDelegate::CreateRaw(this, &FCameraHandler::SetCinemaSensorParams),
+		"Set cinema camera sensor size (mm), focal lenght (mm) and sensor resolution (px)"
+	);
 }

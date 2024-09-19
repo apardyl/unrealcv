@@ -11,6 +11,8 @@ DECLARE_CYCLE_STAT(TEXT("ULitCamSensor::CaptureLit"), STAT_CaptureLit, STATGROUP
 ULitCamSensor::ULitCamSensor(const FObjectInitializer& ObjectInitializer) :
 	Super(ObjectInitializer)
 {
+	bCaptureEveryFrame = true;
+	CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
 }
 
 // void ULitCamSensor::SetupRenderTarget()

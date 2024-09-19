@@ -94,4 +94,6 @@ private:
 	FExecStatus SetMotionBlurParams(const TArray<FString>& Args);
 
 	FExecStatus SetFocalParams(const TArray<FString>& Args);
+
+	FExecStatus SetCinemaSensorParams(const TArray<FString>& Args);
 };

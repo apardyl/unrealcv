@@ -11,6 +11,7 @@
 #include "DepthCamSensor.h"
 #include "NormalCamSensor.h"
 #include "AnnotationCamSensor.h"
+#include "CineCameraSensor.h"
 
 UFusionCamSensor::UFusionCamSensor(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -32,9 +33,14 @@ UFusionCamSensor::UFusionCamSensor(const FObjectInitializer& ObjectInitializer)
 	AnnotationCamSensor = CreateDefaultSubobject<UAnnotationCamSensor>(*ComponentName);
 	FusionSensors.Add(AnnotationCamSensor);
 
-	ComponentName = FString::Printf(TEXT("%s_%s"), *this->GetName(), TEXT("LitCamSensor"));
-	LitCamSensor = CreateDefaultSubobject<ULitCamSensor>(*ComponentName);
-	FusionSensors.Add(LitCamSensor);
+	//ComponentName = FString::Printf(TEXT("%s_%s"), *this->GetName(), TEXT("LitCamSensor"));
+	//LitCamSensor = CreateDefaultSubobject<ULitCamSensor>(*ComponentName);
+	//FusionSensors.Add(LitCamSensor);
+
+	ComponentName = FString::Printf(TEXT("%s_%s"), *this->GetName(), TEXT("CinematicCamSensor"));
+	CinematicCamSensor = CreateDefaultSubobject<UCineCamSensor>(*ComponentName);
+	CinematicCamSensor->SetupAttachment(this);
+	//FusionSensors.Add(CinematicCamSensor->CinematicCaptureSensor);
 
 	// The config loading code should not be placed into the ctor, otherwise it will break the copy behavior
 	FServerConfig& Config = FUnrealcvServer::Get().Config;
@@ -88,7 +94,7 @@ bool UFusionCamSensor::GetEditorPreviewInfo(float DeltaTime, FMinimalViewInfo& V
 	// From CameraComponent
 	if (this->IsActive())
 	{
-		this->LitCamSensor->GetCameraView(DeltaTime, ViewOut);
+		this->CinematicCamSensor->GetCameraView(DeltaTime, ViewOut);
 		return true;
 	}
 	else
@@ -99,7 +105,8 @@ bool UFusionCamSensor::GetEditorPreviewInfo(float DeltaTime, FMinimalViewInfo& V
 
 void UFusionCamSensor::GetLit(TArray<FColor>& LitData, int& Width, int& Height, ELitMode LitMode)
 {
-	this->LitCamSensor->CaptureLit(LitData, Width, Height);
+	this->CinematicCamSensor->CinematicCaptureSensor->CaptureLit(LitData, Width, Height);
+	//this->LitCamSensor->CaptureLit(LitData, Width, Height);
 }
 
 void UFusionCamSensor::GetDepth(TArray<float>& DepthData, int& Width, int& Height, EDepthMode DepthMode)
@@ -158,11 +165,12 @@ void UFusionCamSensor::SetFilmSize(int Width, int Height)
 			UE_LOG(LogTemp, Warning, TEXT("Sensor %d within FusionCamSensor is invalid."), i);
 		}
 	}
+	this->CinematicCamSensor->CinematicCaptureSensor->SetFilmSize(FilmWidth, FilmHeight);
 }
 
 float UFusionCamSensor::GetSensorFOV()
 {
-	return this->LitCamSensor->GetFOV(); 
+	return this->CinematicCamSensor->CinematicCaptureSensor->GetFOV();
 }
 
 void UFusionCamSensor::SetSensorFOV(float fov)
@@ -251,42 +259,42 @@ void UFusionCamSensor::SetOrthoWidth(float OrthoWidth)
 
 void UFusionCamSensor::SetLitCaptureSource(ESceneCaptureSource CaptureSource)
 {
-    this->LitCamSensor->CaptureSource = CaptureSource;
+    this->CinematicCamSensor->CinematicCaptureSensor->CaptureSource = CaptureSource;
 }
 
 // Configure the post process settings
 void UFusionCamSensor::SetReflectionMethod(EReflectionMethod::Type Method)
 {
     // None, Lumen, ScreenSpace, RayTraced
-    this->LitCamSensor->PostProcessSettings.bOverride_ReflectionMethod = true;
-    this->LitCamSensor->PostProcessSettings.ReflectionMethod = Method;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.bOverride_ReflectionMethod = true;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.ReflectionMethod = Method;
 }
 
 void UFusionCamSensor::SetGlobalIlluminationMethod(EDynamicGlobalIlluminationMethod::Type Method)
 {
     // None, Lumen, ScreenSpace, RayTraced, Plugin,
-    this->LitCamSensor->PostProcessSettings.bOverride_DynamicGlobalIlluminationMethod = true;
-    this->LitCamSensor->PostProcessSettings.DynamicGlobalIlluminationMethod = Method;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.bOverride_DynamicGlobalIlluminationMethod = true;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.DynamicGlobalIlluminationMethod = Method;
 }
 
 void UFusionCamSensor::SetExposureMethod(EAutoExposureMethod Method)
 {
-    this->LitCamSensor->PostProcessSettings.bOverride_AutoExposureMethod = true;
-    this->LitCamSensor->PostProcessSettings.AutoExposureMethod = Method;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.bOverride_AutoExposureMethod = true;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.AutoExposureMethod = Method;
 }
 
 void UFusionCamSensor::SetExposureBias(float ExposureBias)
 {
-    this->LitCamSensor->PostProcessSettings.bOverride_AutoExposureBias = true;
-    this->LitCamSensor->PostProcessSettings.AutoExposureBias = ExposureBias;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.bOverride_AutoExposureBias = true;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.AutoExposureBias = ExposureBias;
 }
 
 void UFusionCamSensor::SetAutoExposureSpeed(float SpeedDown, float SpeedUp)
 {
-    this->LitCamSensor->PostProcessSettings.bOverride_AutoExposureSpeedDown = true;
-    this->LitCamSensor->PostProcessSettings.AutoExposureSpeedDown = SpeedDown;
-    this->LitCamSensor->PostProcessSettings.bOverride_AutoExposureSpeedUp = true;
-    this->LitCamSensor->PostProcessSettings.AutoExposureSpeedUp = SpeedUp;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.bOverride_AutoExposureSpeedDown = true;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.AutoExposureSpeedDown = SpeedDown;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.bOverride_AutoExposureSpeedUp = true;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.AutoExposureSpeedUp = SpeedUp;
 }
 
 void UFusionCamSensor::SetAutoExposureBrightness(float MinBrightness, float MaxBrightness)
@@ -298,40 +306,40 @@ void UFusionCamSensor::SetAutoExposureBrightness(float MinBrightness, float MaxB
         return;
     }
     // Auto-Exposure minimum adaptation.
-    this->LitCamSensor->PostProcessSettings.bOverride_AutoExposureMinBrightness = true;
-    this->LitCamSensor->PostProcessSettings.AutoExposureMinBrightness = MinBrightness;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.bOverride_AutoExposureMinBrightness = true;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.AutoExposureMinBrightness = MinBrightness;
     // Auto-Exposure
-    this->LitCamSensor->PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
-    this->LitCamSensor->PostProcessSettings.AutoExposureMaxBrightness = MaxBrightness;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.AutoExposureMaxBrightness = MaxBrightness;
 }
 
 void UFusionCamSensor::SetApplyPhysicalCameraExposure(int ApplyPhysicalCameraExposure)
 {
-    this->LitCamSensor->PostProcessSettings.bOverride_AutoExposureApplyPhysicalCameraExposure = true;
-    this->LitCamSensor->PostProcessSettings.AutoExposureApplyPhysicalCameraExposure = ApplyPhysicalCameraExposure;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.bOverride_AutoExposureApplyPhysicalCameraExposure = true;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.AutoExposureApplyPhysicalCameraExposure = ApplyPhysicalCameraExposure;
 }
 
 
 void UFusionCamSensor::SetMotionBlurParams(float MotionBlurAmount, float MotionBlurMax, float MotionBlurPerObjectSize, int MotionBlurTargetFPS)
 {
     // Strength of motion blur, 0:off
-    this->LitCamSensor->PostProcessSettings.bOverride_MotionBlurAmount = true;
-    this->LitCamSensor->PostProcessSettings.MotionBlurAmount = MotionBlurAmount;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.bOverride_MotionBlurAmount = true;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.MotionBlurAmount = MotionBlurAmount;
     // Max distortion caused by motion blur, in percent of the screen width, 0:off
-    this->LitCamSensor->PostProcessSettings.bOverride_MotionBlurMax = true;
-    this->LitCamSensor->PostProcessSettings.MotionBlurMax = MotionBlurMax;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.bOverride_MotionBlurMax = true;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.MotionBlurMax = MotionBlurMax;
     // The minimum projected screen radius for a primitive to be drawn in the velocity pass, percentage of screen width.
-    this->LitCamSensor->PostProcessSettings.bOverride_MotionBlurPerObjectSize = true;
-    this->LitCamSensor->PostProcessSettings.MotionBlurPerObjectSize = MotionBlurPerObjectSize;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.bOverride_MotionBlurPerObjectSize = true;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.MotionBlurPerObjectSize = MotionBlurPerObjectSize;
     // Target frame rate for motion blur
-    this->LitCamSensor->PostProcessSettings.bOverride_MotionBlurTargetFPS = true;
-    this->LitCamSensor->PostProcessSettings.MotionBlurTargetFPS = MotionBlurTargetFPS;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.bOverride_MotionBlurTargetFPS = true;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.MotionBlurTargetFPS = MotionBlurTargetFPS;
 }
 
 void UFusionCamSensor::SetFocalParams(float FocalDistance, float FocalRegion)
 {
-    this->LitCamSensor->PostProcessSettings.bOverride_DepthOfFieldFocalDistance = true;
-    this->LitCamSensor->PostProcessSettings.DepthOfFieldFocalDistance = FocalDistance;
-    this->LitCamSensor->PostProcessSettings.bOverride_DepthOfFieldFocalRegion = true;
-    this->LitCamSensor->PostProcessSettings.DepthOfFieldFocalRegion = FocalRegion;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.bOverride_DepthOfFieldFocalDistance = true;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.DepthOfFieldFocalDistance = FocalDistance;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.bOverride_DepthOfFieldFocalRegion = true;
+    this->CinematicCamSensor->CinematicCaptureSensor->PostProcessSettings.DepthOfFieldFocalRegion = FocalRegion;
 }
