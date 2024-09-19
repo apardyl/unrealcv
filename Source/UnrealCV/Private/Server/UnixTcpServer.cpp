@@ -735,16 +735,25 @@ bool UUnixTcpServer::Start(int32 InPortNum) // Restart the server if configurati
 		TcpListener->Stop(); // TODO: test the robustness, will this operation successful?
 	}
 
-	this->PortNum = InPortNum; // Start a new TCPListener
-	FIPv4Address IPAddress = FIPv4Address(0, 0, 0, 0);
-	// int32 PortNum = this->PortNum; // Make this configuable
-	FIPv4Endpoint Endpoint(IPAddress, PortNum);
+	FSocket* ServerSocket = nullptr;
 
-	int MaxConnection = 1;
-	FSocket* ServerSocket = FTcpSocketBuilder(TEXT("FTcpListener server")) // TODO: Need to realease this socket
-		// .AsReusable()
-		.BoundToEndpoint(Endpoint)
-		.Listening(MaxConnection);
+	for (int i = 0; i < 10; i++) {
+		this->PortNum = InPortNum + i; // Start a new TCPListener
+		UE_LOG(LogUnrealCV, Warning, TEXT("Trying listening on port %d"), PortNum);
+		FIPv4Address IPAddress = FIPv4Address(0, 0, 0, 0);
+		// int32 PortNum = this->PortNum; // Make this configuable
+		FIPv4Endpoint Endpoint(IPAddress, PortNum);
+
+		ServerSocket = FTcpSocketBuilder(TEXT("FTcpListener server")) // TODO: Need to realease this socket
+			// .AsReusable()
+			.BoundToEndpoint(Endpoint)
+			.Listening(1);
+
+		if (ServerSocket) {
+			break;
+		}
+		UE_LOG(LogUnrealCV, Warning, TEXT("Port %d might be in use"), PortNum);
+	}
 
 	if (ServerSocket)
 	{
