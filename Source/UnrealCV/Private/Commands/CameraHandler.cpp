@@ -338,18 +338,23 @@ FExecStatus FCameraHandler::MoveTo(const TArray<FString>& Args)
 	{
 		return FExecStatus::InvalidArgument;
 	}
-	if (Args[0] != "0")
-	{
-		return FExecStatus::Error("MoveTo only supports the player camera with id 0");
-	}
 
 	float X = FCString::Atof(*Args[1]), Y = FCString::Atof(*Args[2]), Z = FCString::Atof(*Args[3]);
 	FVector Location = FVector(X, Y, Z);
 
-	bool Sweep = true;
-	// if sweep is true, the object can not move through another object
 	// Check invalid location and move back a bit.
-	bool Success = FUnrealcvServer::Get().GetPawn()->SetActorLocation(Location, Sweep, NULL, ETeleportType::TeleportPhysics);
+	if (Args[0] == "0")
+	{
+		FUnrealcvServer::Get().GetPawn()->SetActorLocation(Location, true, NULL, ETeleportType::TeleportPhysics);
+	}
+	else
+	{
+		FExecStatus Status = FExecStatus::OK();
+		UFusionCamSensor* FusionCamSensor = GetCamera(Args, Status);
+		if (!IsValid(FusionCamSensor)) return Status;
+		AActor* parent = FusionCamSensor->GetOwner();
+		parent->SetActorLocation(Location, true, NULL, ETeleportType::TeleportPhysics);
+	}
 
 	return FExecStatus::OK();
 }

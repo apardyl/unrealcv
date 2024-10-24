@@ -47,7 +47,7 @@ void ULitCamSensor::CaptureLit(TArray<FColor>& Image, int& Width, int& Height)
 			return;
 		}
 	}
-	this->CaptureScene();
+	//this->CaptureScene();
 	FReadSurfaceDataFlags ReadSurfaceDataFlags;
 	ReadSurfaceDataFlags.SetLinearToGamma(false); 
 	// TextureTarget->GetRenderTargetResource()->ReadPixels(Image, ReadSurfaceDataFlags);

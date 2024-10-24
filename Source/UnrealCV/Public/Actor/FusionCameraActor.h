@@ -3,6 +3,7 @@
 
 #include "FusionCamSensor.h"
 #include "Actor/CamSensorActor.h"
+#include "Components/SphereComponent.h"
 #include "FusionCameraActor.generated.h"
 
 UCLASS()
@@ -22,4 +23,7 @@ private:
 	// Define it to be VisibleAnywhere not EditableAnywhere. This is enough for changing the component property
 	UPROPERTY(Category = AFusionCameraActor, VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
 	UFusionCamSensor* FusionCamSensor;
+
+	UPROPERTY(EditAnywhere)
+	USphereComponent* CollisionSphere;
 };

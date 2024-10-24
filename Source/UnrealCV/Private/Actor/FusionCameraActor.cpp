@@ -7,8 +7,13 @@ AFusionCameraActor::AFusionCameraActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	CollisionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("SphereMesh"));
+	CollisionSphere->SetSphereRadius(100); // 1m collision radius.
+	CollisionSphere->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+	RootComponent = CollisionSphere;
+
 	FusionCamSensor = CreateDefaultSubobject<UFusionCamSensor>(TEXT("FusionCameraSensor"));
-	RootComponent = FusionCamSensor;
+	FusionCamSensor->SetupAttachment(RootComponent);
 }
 
 TArray<FString> AFusionCameraActor::GetSensorNames()
