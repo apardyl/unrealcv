@@ -712,8 +712,8 @@ bool UUnixTcpServer::Connected(FSocket* ClientSocket, const FIPv4Endpoint& Clien
 	BroadcastConnected(*ClientEndpoint.ToString());
 	// ServiceStatus = StartEchoService(ClientSocket, ClientEndpoint);
 	ServiceStatus = StartMessageServiceINet(ClientSocket, ClientEndpoint);
-	bIsUDS = true;
-	ServiceStatus = StartMessageServiceUDS();
+	//bIsUDS = true;
+	//ServiceStatus = StartMessageServiceUDS();
 	return ServiceStatus;
 	// This is a blocking service, if need to support multiple connections, consider start a new thread here.
 }

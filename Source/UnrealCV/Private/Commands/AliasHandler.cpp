@@ -102,7 +102,7 @@ FExecStatus FAliasHandler::VExecWithOutput(const TArray<FString>& Args)
 	// Cmd = Cmd.TrimTrailing(); // TODO: Simplify this function.
 	Cmd = Cmd.TrimEnd(); // New API
 
-	FConsoleOutputDevice OutputDevice(FUnrealcvServer::Get().GetWorld()->GetGameViewport()->ViewportConsole);
+	//FConsoleOutputDevice OutputDevice(FUnrealcvServer::Get().GetWorld()->GetGameViewport()->ViewportConsole);
 
 
 	// if (Obj->CallFunctionByNameWithArguments(*Cmd, OutputDevice, nullptr, true))
@@ -115,7 +115,7 @@ FExecStatus FAliasHandler::VExecWithOutput(const TArray<FString>& Args)
 	// }
 
 	const TCHAR* Str = *Cmd;
-	FOutputDevice& Ar = OutputDevice;
+	//FOutputDevice& Ar = OutputDevice;
 	UObject* Executor = nullptr;
 	bool bForceCallWithNonExec = true;/*=false*/
 
@@ -233,7 +233,8 @@ FExecStatus FAliasHandler::VExecWithOutput(const TArray<FString>& Args)
 			Arguments.Add(TEXT("Message"), FText::FromName( Message ));
 			Arguments.Add(TEXT("PropertyName"), FText::FromName(It->GetFName()));
 			Arguments.Add(TEXT("FunctionName"), FText::FromName(Function->GetFName()));
-			Ar.Logf( TEXT("%s"), *FText::Format( NSLOCTEXT( "Core", "BadProperty", "'{Message}': Bad or missing property '{PropertyName}' when trying to call {FunctionName}" ), Arguments ).ToString() );
+			UE_LOG(LogUnrealCV, Warning, TEXT("Bad or missing property"));
+			//Ar.Logf( TEXT("%s"), *FText::Format( NSLOCTEXT( "Core", "BadProperty", "'{Message}': Bad or missing property '{PropertyName}' when trying to call {FunctionName}" ), Arguments ).ToString() );
 			bFailed = true;
 
 			break;
