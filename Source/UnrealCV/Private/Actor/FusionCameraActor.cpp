@@ -14,6 +14,9 @@ AFusionCameraActor::AFusionCameraActor()
 
 	FusionCamSensor = CreateDefaultSubobject<UFusionCamSensor>(TEXT("FusionCameraSensor"));
 	FusionCamSensor->SetupAttachment(RootComponent);
+
+	WorldPartitionStreamingSource = CreateDefaultSubobject<UWorldPartitionStreamingSourceComponent>(TEXT("WorldPartitionStreamingSource"));
+	WorldPartitionStreamingSource->Priority = EStreamingSourcePriority::Default;
 }
 
 TArray<FString> AFusionCameraActor::GetSensorNames()
@@ -24,4 +27,9 @@ TArray<FString> AFusionCameraActor::GetSensorNames()
 TArray<UFusionCamSensor*> AFusionCameraActor::GetSensors()
 {
 	return { this->FusionCamSensor };
+}
+
+bool AFusionCameraActor::IsLoaded() const
+{
+	return WorldPartitionStreamingSource->IsStreamingCompleted();
 }

@@ -96,4 +96,10 @@ private:
 	FExecStatus SetFocalParams(const TArray<FString>& Args);
 
 	FExecStatus SetCinemaSensorParams(const TArray<FString>& Args);
+
+	FExecStatus CanSeeObject(const TArray<FString>& Args);
+
+	FExecStatus CanSeePoints(const TArray<FString>& Args);
+
+	FExecStatus IsPartitionLoaded(const TArray<FString>& Args);
 };

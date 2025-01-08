@@ -10,6 +10,7 @@
 #include "CommandDispatcher.h"
 #include "FusionCamSensor.h"
 #include "Serialization.h"
+#include "Utils/UObjectUtils.h"
 #include "Utils/StrFormatter.h"
 #include "PlayerViewMode.h"
 #include "WorldController.h"
@@ -354,6 +355,12 @@ FExecStatus FCameraHandler::MoveTo(const TArray<FString>& Args)
 		if (!IsValid(FusionCamSensor)) return Status;
 		AActor* parent = FusionCamSensor->GetOwner();
 		parent->SetActorLocation(Location, true, NULL, ETeleportType::TeleportPhysics);
+
+		FStrFormatter Ar;
+		Location = FusionCamSensor->GetSensorLocation();
+		Ar << Location;
+
+		return FExecStatus::OK(Ar.ToString());
 	}
 
 	return FExecStatus::OK();
@@ -745,6 +752,90 @@ FExecStatus FCameraHandler::SetCinemaSensorParams(const TArray<FString>& Args) {
 	return FExecStatus::OK();
 }
 
+FExecStatus FCameraHandler::CanSeeObject(const TArray<FString>& Args) {
+	if (Args.Num() != 2) return FExecStatus::InvalidArgument; // camera id, object id
+
+	FExecStatus Status = FExecStatus::InvalidArgument;
+	UFusionCamSensor* FusionCamSensor = GetCamera(Args, Status);
+	if (!IsValid(FusionCamSensor)) return FExecStatus::InvalidArgument;
+	AActor* CameraActor = FusionCamSensor->GetOwner();
+
+	FString ActorId = Args[1];
+	AActor* Actor = GetActorById(FUnrealcvServer::Get().GetWorld(), ActorId);
+	if (!IsValid(Actor)) return FExecStatus::Error("Can not find object");
+
+	FHitResult HitResult;
+	FVector Start = Actor->GetActorLocation();
+	FVector End = FusionCamSensor->GetSensorLocation();
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(Actor);
+
+	bool bIsVisible = FUnrealcvServer::Get().GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldDynamic, Params);
+	if (bIsVisible && HitResult.GetActor() == CameraActor) {
+		return FExecStatus::OK("true");
+	}
+
+	return FExecStatus::OK("false");
+}
+
+FExecStatus FCameraHandler::CanSeePoints(const TArray<FString>& Args) {
+	if (Args.Num() != 2) return FExecStatus::InvalidArgument; // camera id, points list
+
+	FExecStatus Status = FExecStatus::InvalidArgument;
+	UFusionCamSensor* FusionCamSensor = GetCamera(Args, Status);
+	if (!IsValid(FusionCamSensor)) return FExecStatus::InvalidArgument;
+	FVector End = FusionCamSensor->GetSensorLocation();
+	AActor* CameraActor = FusionCamSensor->GetOwner();
+	FCollisionQueryParams Params;
+	UWorld* World = FUnrealcvServer::Get().GetWorld();
+
+	TArray<FString> PointsList;
+	int len = Args[1].ParseIntoArray(PointsList, TEXT(","), true);
+	if (len < 1) return FExecStatus::InvalidArgument; // No points
+
+	TArray<FVector> Points;
+	for (const FString& PointStr : PointsList) {
+		TArray<FString> CoordsList;
+		PointStr.ParseIntoArray(CoordsList, TEXT(":"), true);
+		if (CoordsList.Num() != 3) return FExecStatus::InvalidArgument; // Invalid point
+		if (!FCString::IsNumeric(*CoordsList[0]) || !FCString::IsNumeric(*CoordsList[1]) || !FCString::IsNumeric(*CoordsList[2])) return FExecStatus::InvalidArgument; // Invalid point
+		FVector Point(FCString::Atof(*CoordsList[0]), FCString::Atof(*CoordsList[1]), FCString::Atof(*CoordsList[2]));
+		Points.Add(Point);
+	}
+
+	FString Visibility;
+
+	for (const FVector& Point : Points) {
+		FHitResult HitResult;
+		FVector Start = Point;
+
+		bool bIsVisible = World->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldDynamic, Params);
+
+		if (bIsVisible && HitResult.GetActor() == CameraActor) {
+			Visibility += TEXT("1");
+		}
+		else {
+			Visibility += TEXT("0");
+		}
+		Visibility += TEXT(",");
+	}
+
+	return FExecStatus::OK(Visibility.TrimChar(','));
+}
+
+FExecStatus FCameraHandler::IsPartitionLoaded(const TArray<FString>& Args) {
+	if (Args.Num() != 1) return FExecStatus::InvalidArgument; // camera id
+
+	FExecStatus Status = FExecStatus::InvalidArgument;
+	UFusionCamSensor* FusionCamSensor = GetCamera(Args, Status);
+	if (!IsValid(FusionCamSensor)) return FExecStatus::InvalidArgument;
+
+	AFusionCameraActor* Actor = static_cast<AFusionCameraActor*>(FusionCamSensor->GetOwner());
+	if (Actor->IsLoaded()) {
+		return FExecStatus::OK("true");
+	}
+	return FExecStatus::OK("false");
+}
 
 void FCameraHandler::RegisterCommands()
 {
@@ -933,5 +1024,23 @@ void FCameraHandler::RegisterCommands()
 		"vget /camera/[uint]/cine [float] [float] [uint]",
 		FDispatcherDelegate::CreateRaw(this, &FCameraHandler::SetCinemaSensorParams),
 		"Set cinema camera sensor size (mm), focal lenght (mm) and sensor resolution (px)"
+	);
+
+	CommandDispatcher->BindCommand(
+		"vget /camera/[uint]/cansee [str]",
+		FDispatcherDelegate::CreateRaw(this, &FCameraHandler::CanSeeObject),
+		"Check if the object is visible from the camera position"
+	);
+
+	CommandDispatcher->BindCommand(
+		"vget /camera/[uint]/cansee_points [str]",
+		FDispatcherDelegate::CreateRaw(this, &FCameraHandler::CanSeePoints),
+		"Check if the points are visible from the camera position"
+	);
+
+	CommandDispatcher->BindCommand(
+		"vget /camera/[uint]/partition_loaded",
+		FDispatcherDelegate::CreateRaw(this, &FCameraHandler::IsPartitionLoaded),
+		"Check if the partition is loaded"
 	);
 }

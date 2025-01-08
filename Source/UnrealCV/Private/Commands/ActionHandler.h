@@ -17,6 +17,9 @@ private:
 	/** vget /action/game/is_paused */
 	FExecStatus GetIsPaused(const TArray<FString>& Args); 
 
+	/** vget /action/game/is_loaded */
+	FExecStatus GetIsLoaded(const TArray<FString>& Args);
+
 	/** vset /action/game/level */
 	FExecStatus OpenLevel(const TArray<FString>& Args);
 

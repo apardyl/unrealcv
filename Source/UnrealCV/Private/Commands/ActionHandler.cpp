@@ -28,6 +28,12 @@ void FActionHandler::RegisterCommands()
 		"Get the pause status"
 	);
 
+	CommandDispatcher->BindCommand(
+		"vget /action/game/is_loaded",
+		FDispatcherDelegate::CreateRaw(this, &FActionHandler::GetIsLoaded),
+		"Get the loaded status"
+	);
+
 	Cmd = FDispatcherDelegate::CreateRaw(this, &FActionHandler::OpenLevel);
 	Help = "Open level";
 	CommandDispatcher->BindCommand("vset /action/game/level [str]", Cmd, Help);
@@ -75,6 +81,17 @@ FExecStatus FActionHandler::GetIsPaused(const TArray<FString>& Args)
 	return FExecStatus::OK(bIsPaused ? TEXT("true") : TEXT("false"));
 }
 
+FExecStatus FActionHandler::GetIsLoaded(const TArray<FString>& Args) {
+	UWorld* World = this->GetWorld();
+	for (ULevelStreaming* Level : World->GetStreamingLevels())
+	{
+		if (Level && !Level->IsLevelLoaded())
+		{
+			return FExecStatus::OK(TEXT("false"));
+		}
+	}
+	return FExecStatus::OK(TEXT("true"));
+}
 
 FExecStatus FActionHandler::OpenLevel(const TArray<FString>& Args)
 {
